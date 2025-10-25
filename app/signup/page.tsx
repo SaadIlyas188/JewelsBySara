@@ -24,7 +24,6 @@ const supabase = createClient(
 export default function SignupPage() {
   
   const router = useRouter()
-  const { toast } = useToast()
   const { signup } = useAuth()
   const [formData, setFormData] = useState({
     username: "",

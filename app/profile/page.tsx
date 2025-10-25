@@ -86,7 +86,10 @@ export default function ProfilePage() {
     toast.success("Your profile has been updated successfully.")
 
     setIsEditing(false)
-    window.location.reload()
+    if (typeof window !== "undefined") {
+  window.location.reload()
+}
+
   }
 
   if (!isAuthenticated || !user) {

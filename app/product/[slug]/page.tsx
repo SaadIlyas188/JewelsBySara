@@ -94,6 +94,18 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 }, [product, user])
 
 
+ const handleShare = () => {
+    if (typeof window !== "undefined") {
+      const url = window.location.href
+      navigator.clipboard.writeText(url)
+        .then(() => {
+          toast.success("URL copied to clipboard!")
+        })
+        .catch(() => {
+          toast.error("Failed to copy URL")
+        })
+    }
+  }
   // ✅ Add review handler
 const handleSubmitReview = async () => {
   if (!product || !reviewTitle.trim() || selectedStars === 0) {
@@ -422,24 +434,15 @@ const isNewArrival =
   <span className="sr-only">Add to wishlist</span>
 </Button>
 
-              <Button
-  size="lg"
-  variant="outline"
-  className="h-12 bg-transparent"
-  onClick={() => {
-    const url = window.location.href
-    navigator.clipboard.writeText(url)
-      .then(() => {
-        toast.success("URL copied to clipboard!")
-      })
-      .catch(() => {
-        toast.error("Failed to copy URL")
-      })
-  }}
->
-  <Share2 className="h-5 w-5" />
-  <span className="sr-only">Share</span>
-</Button>
+           <Button
+      size="lg"
+      variant="outline"
+      className="h-12 bg-transparent"
+      onClick={handleShare}
+    >
+      <Share2 className="h-5 w-5" />
+      <span className="sr-only">Share</span>
+    </Button>
 
             </div>
           </div>
