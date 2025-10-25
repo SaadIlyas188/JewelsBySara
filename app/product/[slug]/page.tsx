@@ -443,6 +443,7 @@ const isNewArrival =
       <Share2 className="h-5 w-5" />
       <span className="sr-only">Share</span>
     </Button>
+    
 
             </div>
           </div>
