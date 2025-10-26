@@ -26,7 +26,7 @@ export default function AdminLoginPage() {
     await new Promise((resolve) => setTimeout(resolve, 800))
 
     // Check admin credentials
-    if (email === "admin@admin.com" && password === "admin") {
+    if (email === "admin@admin.com" && password === "03154516337Rr!") {
       // Store admin session
       localStorage.setItem("adminAuth", JSON.stringify({ email, timestamp: Date.now() }))
 
