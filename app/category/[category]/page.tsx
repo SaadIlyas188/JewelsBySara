@@ -145,6 +145,7 @@
 //   )
 // }
 
+
 "use client"
 
 import Image from "next/image"
@@ -203,46 +204,54 @@ export default function CategoryPage({ params }: { params: { category: string } 
   }, [params.category, supabase])
 
   // 🧠 Sort logic
-  let sortedProducts = [...products].sort((a, b) => {
-    const aNew = new Date().getTime() - new Date(a.created_at).getTime() < 7 * 24 * 60 * 60 * 1000
-    const bNew = new Date().getTime() - new Date(b.created_at).getTime() < 7 * 24 * 60 * 60 * 1000
-    if (aNew && !bNew) return -1
-    if (!aNew && bNew) return 1
+  // 🧩 Combined Filtering + Sorting Logic
+let filteredProducts = [...products]
 
-    switch (sortBy) {
-      case "price-low":
-        return a.price - b.price
-      case "price-high":
-        return b.price - a.price
-      case "name":
-        return a.name.localeCompare(b.name)
-      default:
-        return b.featured ? 1 : -1
-    }
-  })
+// Apply filter first
+if (filter === "new") {
+  filteredProducts = filteredProducts.filter(
+    (product) =>
+      product.stock_quantity > 0 &&
+      new Date().getTime() - new Date(product.created_at).getTime() <
+        7 * 24 * 60 * 60 * 1000 // within 7 days
+  )
+} else if (filter === "sale") {
+  filteredProducts = filteredProducts.filter(
+    (product) =>
+      product.stock_quantity > 0 &&
+      product.original_price &&
+      product.price < product.original_price
+  )
+} else if (filter === "all") {
+  filteredProducts = [
+    ...filteredProducts.filter((p) => p.stock_quantity > 0),
+    ...filteredProducts.filter((p) => p.stock_quantity === 0),
+  ]
+}
 
-  // 🧩 Filter logic (with stock rules)
-  if (filter === "new") {
-    sortedProducts = sortedProducts.filter(
-      (product) =>
-        product.stock_quantity > 0 &&
-        new Date().getTime() - new Date(product.created_at).getTime() <
-          7 * 24 * 60 * 60 * 1000
-    )
-  } else if (filter === "sale") {
-    sortedProducts = sortedProducts.filter(
-      (product) =>
-        product.stock_quantity > 0 &&
-        product.original_price &&
-        product.price < product.original_price
-    )
-  } else if (filter === "all") {
-    // In "All Products" view → show in-stock first, then out-of-stock
-    sortedProducts = [
-      ...sortedProducts.filter((p) => p.stock_quantity > 0),
-      ...sortedProducts.filter((p) => p.stock_quantity === 0),
-    ]
+// Apply sorting AFTER filter
+let sortedProducts = [...filteredProducts].sort((a, b) => {
+  switch (sortBy) {
+    case "price-low":
+      return a.price - b.price
+    case "price-high":
+      return b.price - a.price
+    case "name":
+      return a.name.localeCompare(b.name)
+    case "featured":
+    default:
+      const aNew =
+        new Date().getTime() - new Date(a.created_at).getTime() <
+        7 * 24 * 60 * 60 * 1000
+      const bNew =
+        new Date().getTime() - new Date(b.created_at).getTime() <
+        7 * 24 * 60 * 60 * 1000
+      if (aNew && !bNew) return -1
+      if (!aNew && bNew) return 1
+      return b.featured ? 1 : -1
   }
+})
+
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -259,15 +268,11 @@ export default function CategoryPage({ params }: { params: { category: string } 
         </div>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <h1 className="font-serif text-4xl font-bold text-balance mb-2">
-              {categoryName}
-            </h1>
+            <h1 className="font-serif text-4xl font-bold text-balance mb-2">{categoryName}</h1>
             <p className="text-muted-foreground">
               {loading
                 ? "Loading..."
-                : `${products.length} ${
-                    products.length === 1 ? "product" : "products"
-                  }`}
+                : `${products.length} ${products.length === 1 ? "product" : "products"}`}
             </p>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
@@ -317,32 +322,34 @@ export default function CategoryPage({ params }: { params: { category: string } 
                 7 * 24 * 60 * 60 * 1000
             const isOnSale =
               product.original_price && product.price < product.original_price
-
             const averageRating =
               product.rating && product.rating > 0 ? product.rating : null
 
             return (
               <Card
                 key={product.id}
-                className="group overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all"
+                className="group flex flex-col justify-between overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all h-full"
               >
                 <Link href={`/product/${product.slug}`}>
                   <div className="relative aspect-square overflow-hidden bg-muted">
-                    {isOutOfStock && (
-                      <Badge className="absolute left-2 top-2 sm:left-4 sm:top-4 z-10 bg-gray-400 text-white text-xs sm:text-sm">
-                        Out of Stock
-                      </Badge>
-                    )}
-                    {!isOutOfStock && isOnSale && (
-                      <Badge className="absolute left-2 top-2 sm:left-4 sm:top-4 z-10 bg-destructive text-destructive-foreground text-xs sm:text-sm">
-                        On Sale
-                      </Badge>
-                    )}
-                    {!isOutOfStock && !isOnSale && isNewArrival && (
-                      <Badge className="absolute left-2 top-2 sm:left-4 sm:top-4 z-10 bg-green-600 text-white text-xs sm:text-sm">
-                        New Arrival
-                      </Badge>
-                    )}
+                    {/* 🏷️ Modern, non-overlapping, cinematic badges */}
+                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-1.5 z-10">
+                      {isOutOfStock && (
+                        <Badge className="bg-gray-500/80 backdrop-blur-md text-white text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full shadow-md">
+                          Out of Stock
+                        </Badge>
+                      )}
+                      {!isOutOfStock && isOnSale && (
+                        <Badge className="bg-red-500/80 backdrop-blur-md text-white text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full shadow-md animate-pulse">
+                          On Sale
+                        </Badge>
+                      )}
+                      {!isOutOfStock && isNewArrival && (
+                        <Badge className="bg-emerald-500/80 backdrop-blur-md text-white text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full shadow-md">
+                          New Arrival
+                        </Badge>
+                      )}
+                    </div>
 
                     <Image
                       src={product.images?.[0] || "/placeholder.svg"}
@@ -353,15 +360,20 @@ export default function CategoryPage({ params }: { params: { category: string } 
                   </div>
                 </Link>
 
-                <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                <CardContent className="flex flex-col justify-between p-4 sm:p-6 space-y-3 sm:space-y-4 flex-grow">
                   <div>
                     <Link href={`/product/${product.slug}`}>
-                      <h3 className="font-semibold text-sm sm:text-base md:text-lg mb-1 sm:mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                      <h3
+                        className="
+                          font-semibold text-sm sm:text-base md:text-lg mb-1 sm:mb-2
+                          truncate group-hover:text-primary transition-colors text-center sm:text-left
+                        "
+                      >
                         {product.name}
                       </h3>
                     </Link>
 
-                    <div className="flex items-center space-x-1 mb-1 sm:mb-2">
+                    <div className="flex items-center justify-center sm:justify-start space-x-1 mb-1 sm:mb-2">
                       {averageRating ? (
                         <>
                           {[...Array(5)].map((_, i) => (
@@ -386,27 +398,30 @@ export default function CategoryPage({ params }: { params: { category: string } 
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5 sm:space-y-1">
-                      <p className="text-base sm:text-lg font-bold text-primary">
-                        Rs. {product.price?.toLocaleString()}
-                      </p>
-                      {isOnSale && (
-                        <p className="text-xs sm:text-sm text-muted-foreground line-through">
-                          Rs. {product.original_price?.toLocaleString()}
-                        </p>
-                      )}
-                    </div>
+                 <div className="mt-auto flex items-end justify-between">
+  <div className="flex flex-col justify-end h-[42px] sm:h-[48px]">
+    <p className="text-base sm:text-lg font-bold text-primary leading-tight">
+      Rs. {product.price?.toLocaleString()}
+    </p>
+    <p
+      className={`text-xs sm:text-sm text-muted-foreground line-through ${
+        isOnSale ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      Rs. {product.original_price?.toLocaleString() || " "}
+    </p>
+  </div>
 
-                    <Button
-                      size="sm"
-                      onClick={() => addItem(product.id)}
-                      disabled={isOutOfStock}
-                      className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3 hover:bg-primary/90"
-                    >
-                      {isOutOfStock ? "Out of Stock" : "Add to Cart"}
-                    </Button>
-                  </div>
+  <Button
+    size="sm"
+    onClick={() => addItem(product.id)}
+    disabled={isOutOfStock}
+    className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3 hover:bg-primary/90"
+  >
+    {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+  </Button>
+</div>
+
                 </CardContent>
               </Card>
             )
@@ -422,4 +437,3 @@ export default function CategoryPage({ params }: { params: { category: string } 
     </div>
   )
 }
-

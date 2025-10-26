@@ -243,241 +243,269 @@ const isNewArrival =
   new Date().getTime() - new Date(product.created_at).getTime() < 7 * 24 * 60 * 60 * 1000;
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Breadcrumb */}
-      <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-8">
-        <Link href="/" className="hover:text-primary transition-colors">
-          Home
-        </Link>
-        <span>/</span>
-        <Link href={`/category/${product.category}`} className="hover:text-primary transition-colors">
-          {product.category
-            ?.split("-")
-            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ")}
-        </Link>
-        <span>/</span>
-        <span className="text-foreground">{product.name}</span>
-      </nav>
+  <div className="container mx-auto px-4 py-12">
+    {/* Breadcrumb */}
+    <nav className="flex flex-wrap items-center space-x-2 text-sm text-muted-foreground mb-8">
+      <Link href="/" className="hover:text-primary transition-colors">
+        Home
+      </Link>
+      <span>/</span>
+      <Link href={`/category/${product.category}`} className="hover:text-primary transition-colors">
+        {product.category
+          ?.split("-")
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")}
+      </Link>
+      <span>/</span>
+      <span className="text-foreground">{product.name}</span>
+    </nav>
 
-      {/* Product Details */}
-      <div className="grid gap-12 lg:grid-cols-2 mb-16">
-        {/* Images */}
-        <div className="space-y-4">
-          <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
-            {isOnSale && (
-  <Badge className="absolute left-4 top-4 z-10 bg-destructive text-destructive-foreground">
-    Sale
-  </Badge>
-)}
+    {/* Product Details */}
+    <div className="grid gap-10 lg:grid-cols-2 mb-16">
+      {/* Images */}
+      <div className="space-y-4">
+        <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+          {isOnSale && (
+            <Badge className="absolute left-4 top-4 z-10 bg-destructive text-destructive-foreground">
+              Sale
+            </Badge>
+          )}
 
-{isNewArrival && (
-  <Badge className="absolute right-4 top-4 z-10 bg-green-600 text-white">
-    New Arrival
-  </Badge>
-)}
+          {isNewArrival && (
+            <Badge className="absolute right-4 top-4 z-10 bg-green-600 text-white">
+              New Arrival
+            </Badge>
+          )}
 
-            <Image
-              src={images[selectedImage] || "/placeholder.svg"}
-              alt={product.name}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
-          <div className="grid grid-cols-4 gap-4">
-            {images.map((image: string, index: number) => (
-              <button
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                className={`relative aspect-square overflow-hidden rounded-lg bg-muted border-2 transition-colors ${
-                  selectedImage === index ? "border-primary" : "border-transparent"
-                }`}
-              >
-                <Image src={image || "/placeholder.svg"} alt={`${product.name} ${index + 1}`} fill className="object-cover" />
-              </button>
-            ))}
-          </div>
+          <Image
+            src={images[selectedImage] || "/placeholder.svg"}
+            alt={product.name}
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
 
-        {/* Product Info */}
-        <div className="space-y-6">
-          <div>
-            <h1 className="font-serif text-4xl font-bold text-balance mb-4">{product.name}</h1>
-           <div className="flex items-center space-x-4 mb-4">
-  {averageRating ? (
-    <>
-      <div className="flex items-center space-x-1">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`h-5 w-5 ${
-              i < Math.round(averageRating)
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-300"
-            }`}
-          />
-        ))}
+        {/* Image Thumbnails */}
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 sm:gap-4">
+          {images.map((image: string, index: number) => (
+            <button
+              key={index}
+              onClick={() => setSelectedImage(index)}
+              className={`relative aspect-square overflow-hidden rounded-lg bg-muted border-2 transition-colors ${
+                selectedImage === index ? "border-primary" : "border-transparent"
+              }`}
+            >
+              <Image
+                src={image || "/placeholder.svg"}
+                alt={`${product.name} ${index + 1}`}
+                fill
+                className="object-cover"
+              />
+            </button>
+          ))}
+        </div>
       </div>
-      <span className="text-sm text-muted-foreground">
-        {averageRating.toFixed(1)} ({product.reviews?.length || 0} reviews)
-      </span>
-    </>
-  ) : (
-    <span className="text-sm text-muted-foreground">No reviews yet</span>
-  )}
-</div>
 
-            <div className="flex items-baseline space-x-4 mb-6">
-              <p className="text-4xl font-bold text-primary">Rs. {Number(product.price).toLocaleString()}</p>
-              {product.original_price && (
-                <p className="text-xl text-muted-foreground line-through">
-                  Rs. {Number(product.original_price).toLocaleString()}
-                </p>
-              )}
-            </div>
-            <p className="text-muted-foreground leading-relaxed">{product.description}</p>
-          </div>
+      {/* Product Info */}
+      <div className="space-y-6">
+        <div>
+          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-balance mb-3 sm:mb-4">
+            {product.name}
+          </h1>
 
-          <Separator />
-
-          {/* Stock */}
-          <div className="flex items-center space-x-2">
-            {product.in_stock ? (
+          {/* Rating */}
+          <div className="flex flex-wrap items-center space-x-3 mb-3 sm:mb-4">
+            {averageRating ? (
               <>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  In Stock
-                </Badge>
-                <span className="text-sm text-muted-foreground">{product.stock_quantity} units available</span>
+                <div className="flex items-center space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-5 w-5 ${
+                        i < Math.round(averageRating)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {averageRating.toFixed(1)} ({product.reviews?.length || 0} reviews)
+                </span>
               </>
             ) : (
-              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                Out of Stock
-              </Badge>
+              <span className="text-sm text-muted-foreground">No reviews yet</span>
             )}
           </div>
 
-          {/* Quantity + Add to Cart */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium">Quantity:</span>
-              <div className="flex items-center border rounded-lg">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={!product.in_stock}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="w-12 text-center">{quantity}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
-                  disabled={!product.in_stock}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex space-x-4">
-              <Button size="lg" className="flex-1 h-12" onClick={handleAddToCart} disabled={!product.in_stock}>
-                Add to Cart
+          {/* Price */}
+          <div className="flex items-baseline flex-wrap space-x-3 sm:space-x-4 mb-5">
+            <p className="text-3xl sm:text-4xl font-bold text-primary">
+              Rs. {Number(product.price).toLocaleString()}
+            </p>
+            {product.original_price && (
+              <p className="text-lg sm:text-xl text-muted-foreground line-through">
+                Rs. {Number(product.original_price).toLocaleString()}
+              </p>
+            )}
+          </div>
+
+          <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+            {product.description}
+          </p>
+        </div>
+
+        <Separator />
+
+        {/* Stock Info */}
+        <div className="flex flex-wrap items-center gap-2">
+          {product.in_stock ? (
+            <>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                In Stock
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                {product.stock_quantity} units available
+              </span>
+            </>
+          ) : (
+            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+              Out of Stock
+            </Badge>
+          )}
+        </div>
+
+        {/* Quantity & Actions */}
+        <div className="space-y-4">
+          <div className="flex items-center space-x-4">
+            <span className="text-sm font-medium">Quantity:</span>
+            <div className="flex items-center border rounded-lg">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={!product.in_stock}
+              >
+                <Minus className="h-4 w-4" />
               </Button>
-             <Button
-  size="lg"
-  variant="outline"
-  className={`h-12 bg-transparent flex items-center justify-center ${isWishlisted ? "bg-pink-50" : ""}`}
-  onClick={async () => {
-    if (!user) {
-      toast.error("Please log in to add to wishlist")
-      return
-    }
-
-    try {
-      const { data: existingWishlist, error: fetchError } = await supabase
-        .from("wishlist")
-        .select("product_ids")
-        .eq("user_email", user.email)
-        .single()
-
-      if (fetchError && fetchError.code !== "PGRST116") throw fetchError
-
-      let newProductIds: number[] = []
-      if (!existingWishlist) {
-        newProductIds = [product.id]
-        await supabase.from("wishlist").insert([{ user_email: user.email, product_ids: newProductIds }])
-      } else {
-        newProductIds = Array.isArray(existingWishlist.product_ids)
-          ? [...existingWishlist.product_ids]
-          : []
-
-        if (newProductIds.includes(product.id)) {
-          // Remove from wishlist
-          newProductIds = newProductIds.filter((id) => id !== product.id)
-          toast.success("Removed from wishlist")
-          setIsWishlisted(false)
-        } else {
-          // Add to wishlist
-          newProductIds.push(product.id)
-          toast.success("Added to wishlist")
-          setIsWishlisted(true)
-        }
-
-        await supabase
-          .from("wishlist")
-          .update({ product_ids: newProductIds })
-          .eq("user_email", user.email)
-      }
-    } catch (err: any) {
-      console.error(err)
-      toast.error(`Failed to update wishlist: ${err.message}`)
-    }
-  }}
->
-  <Heart
-    className={`h-5 w-5 transition-all duration-200 ${
-      isWishlisted ? "fill-pink-500 text-pink-500" : "text-pink-500"
-    }`}
-  />
-  <span className="sr-only">Toggle wishlist</span>
-</Button>
-
-
-           <Button
-      size="lg"
-      variant="outline"
-      className="h-12 bg-transparent"
-      onClick={handleShare}
-    >
-      <Share2 className="h-5 w-5" />
-      <span className="sr-only">Share</span>
-    </Button>
-
-
+              <span className="w-10 sm:w-12 text-center">{quantity}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  setQuantity(Math.min(product.stock_quantity, quantity + 1))
+                }
+                disabled={!product.in_stock}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
-          <Separator />
+          <div className="flex flex-wrap gap-3 sm:space-x-4">
+            <Button
+              size="lg"
+              className="flex-1 h-12"
+              onClick={handleAddToCart}
+              disabled={!product.in_stock}
+            >
+              Add to Cart
+            </Button>
 
-          {/* Features */}
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3 text-sm">
-              <Truck className="h-5 w-5 text-primary" />
-              <span>Free shipping on orders over Rs. 5000</span>
-            </div>
-            <div className="flex items-center space-x-3 text-sm">
-              <Shield className="h-5 w-5 text-primary" />
-              <span>Quality guaranteed - Handcrafted with care</span>
-            </div>
-            <div className="flex items-center space-x-3 text-sm">
-              <RotateCcw className="h-5 w-5 text-primary" />
-              <span>Easy returns within 7 days</span>
-            </div>
+            {/* Wishlist Button */}
+            <Button
+              size="lg"
+              variant="outline"
+              className={`h-12 bg-transparent flex items-center justify-center ${
+                isWishlisted ? "bg-pink-50" : ""
+              }`}
+              onClick={async () => {
+                if (!user) {
+                  toast.error("Please log in to add to wishlist")
+                  return
+                }
+                try {
+                  const { data: existingWishlist, error: fetchError } = await supabase
+                    .from("wishlist")
+                    .select("product_ids")
+                    .eq("user_email", user.email)
+                    .single()
+
+                  if (fetchError && fetchError.code !== "PGRST116") throw fetchError
+
+                  let newProductIds: number[] = []
+                  if (!existingWishlist) {
+                    newProductIds = [product.id]
+                    await supabase
+                      .from("wishlist")
+                      .insert([{ user_email: user.email, product_ids: newProductIds }])
+                  } else {
+                    newProductIds = Array.isArray(existingWishlist.product_ids)
+                      ? [...existingWishlist.product_ids]
+                      : []
+
+                    if (newProductIds.includes(product.id)) {
+                      newProductIds = newProductIds.filter((id) => id !== product.id)
+                      toast.success("Removed from wishlist")
+                      setIsWishlisted(false)
+                    } else {
+                      newProductIds.push(product.id)
+                      toast.success("Added to wishlist")
+                      setIsWishlisted(true)
+                    }
+
+                    await supabase
+                      .from("wishlist")
+                      .update({ product_ids: newProductIds })
+                      .eq("user_email", user.email)
+                  }
+                } catch (err: any) {
+                  console.error(err)
+                  toast.error(`Failed to update wishlist: ${err.message}`)
+                }
+              }}
+            >
+              <Heart
+                className={`h-5 w-5 transition-all duration-200 ${
+                  isWishlisted
+                    ? "fill-pink-500 text-pink-500"
+                    : "text-pink-500"
+                }`}
+              />
+            </Button>
+
+            {/* Share */}
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-12 bg-transparent"
+              onClick={handleShare}
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Features */}
+        <div className="space-y-3 text-sm sm:text-base">
+          <div className="flex items-center space-x-3">
+            <Truck className="h-5 w-5 text-primary" />
+            <span>Free shipping on orders over Rs. 5000</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Shield className="h-5 w-5 text-primary" />
+            <span>Quality guaranteed - Handcrafted with care</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <RotateCcw className="h-5 w-5 text-primary" />
+            <span>Easy returns within 7 days</span>
           </div>
         </div>
       </div>
+    </div>
 
       {/* Tabs */}
       <Tabs defaultValue="description" className="mb-16">
@@ -656,44 +684,67 @@ const isNewArrival =
       </Tabs>
 
       {/* Related Products */}
-      {relatedProducts.length > 0 ? (
-        <div>
-          <h2 className="font-serif text-3xl font-bold mb-8">You May Also Like</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {relatedProducts.map((relatedProduct) => (
-              <Card
-                key={relatedProduct.id}
-                className="group overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all"
-              >
-                <Link href={`/product/${relatedProduct.slug}`}>
-                  <div className="relative aspect-square overflow-hidden bg-muted">
-                    <Image
-                      src={relatedProduct.images?.[0] || "/placeholder.svg"}
-                      alt={relatedProduct.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                </Link>
-                <CardContent className="p-4 space-y-3">
-                  <Link href={`/product/${relatedProduct.slug}`}>
-                    <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
-                      {relatedProduct.name}
-                    </h3>
-                  </Link>
-                  <p className="text-lg font-bold text-primary">
-                    Rs. {Number(relatedProduct.price).toLocaleString()}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="text-center py-12 text-muted-foreground">No related products found.</div>
-      )}
+     {relatedProducts.length > 0 ? (
+  <div>
+    <h2 className="font-serif text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">
+      You May Also Like
+    </h2>
+
+    {/* ✅ Scrollable container for mobile */}
+    <div className="overflow-x-auto sm:overflow-visible">
+      <div
+        className="
+          flex sm:grid
+          sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4
+          gap-3 sm:gap-4
+          sm:justify-normal
+        "
+      >
+        {relatedProducts.map((relatedProduct) => (
+          <Card
+            key={relatedProduct.id}
+            className="
+              group flex-shrink-0
+              w-[calc(33.333%-0.5rem)] sm:w-auto
+              min-w-[120px]
+              overflow-hidden border-0 shadow-sm
+              hover:shadow-lg transition-all
+            "
+          >
+            <Link href={`/product/${relatedProduct.slug}`}>
+              <div className="relative aspect-square overflow-hidden bg-muted">
+                <Image
+                  src={relatedProduct.images?.[0] || '/placeholder.svg'}
+                  alt={relatedProduct.name}
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+            </Link>
+            <CardContent className="p-2 sm:p-4 space-y-1 sm:space-y-3">
+              <Link href={`/product/${relatedProduct.slug}`}>
+                <h3 className="font-semibold text-xs sm:text-base line-clamp-2 group-hover:text-primary transition-colors text-center sm:text-left">
+                  {relatedProduct.name}
+                </h3>
+              </Link>
+              <p className="text-sm sm:text-lg font-bold text-primary text-center sm:text-left">
+                Rs. {Number(relatedProduct.price).toLocaleString()}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
-  )
+  </div>
+) : (
+  <div className="text-center py-12 text-muted-foreground">
+    No related products found.
+  </div>
+)}
+
+
+  </div>
+)
 }
 
 

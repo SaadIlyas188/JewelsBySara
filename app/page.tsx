@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
+import { motion } from "framer-motion"
 import { useCart } from "@/contexts/cart-context"
 import { Hero } from "@/components/hero/hero"
 import { createClient } from "@supabase/supabase-js"
@@ -90,7 +91,8 @@ export default function HomePage() {
       </section>
 
      {/* ✅ FEATURED COLLECTION */}
-<section className="py-16 sm:py-20 lg:py-32 bg-gradient-to-b from-white to-muted/30">
+{/* ✅ FEATURED COLLECTION */}
+<section className="py-16 sm:py-20 lg:py-32 bg-gradient-to-b from-white to-muted/30 overflow-hidden">
   <div className="container mx-auto px-3 sm:px-4">
     <div className="mb-10 sm:mb-20 text-center">
       <Badge className="mb-3 sm:mb-6 bg-baby-pink text-raspberry border-raspberry/20 text-xs sm:text-base px-2 sm:px-4 py-1 sm:py-1.5">
@@ -109,50 +111,61 @@ export default function HomePage() {
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-raspberry"></div>
       </div>
     ) : (
-      <div className="grid gap-4 sm:gap-6 grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {featuredProducts.map((product) => (
-          <Card
-            key={product.id}
-            className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-500 hover:bg-baby-pink/30"
-          >
-            <Link href={`/product/${product.slug}`}>
-              <div className="relative aspect-square overflow-hidden bg-muted/30">
-                <Image
-                  src={product.images?.[0] || "/placeholder.svg"}
-                  alt={product.name}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-              </div>
-            </Link>
-            <CardContent className="p-2 sm:p-4 md:p-6 space-y-1 sm:space-y-3">
+      // ✅ Animated horizontal scrolling wrapper
+      <div className="relative overflow-hidden">
+        <div
+          className="flex gap-4 sm:gap-6 animate-scroll-x"
+          style={{
+            width: "max-content", // ensures continuous horizontal layout
+          }}
+        >
+          {featuredProducts.concat(featuredProducts).map((product, i) => (
+            <Card
+              key={product.id + '-' + i}
+              className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-500 hover:bg-baby-pink/30 flex-shrink-0 w-[33.33vw] sm:w-[30vw] md:w-[22vw] lg:w-[18vw]"
+            >
               <Link href={`/product/${product.slug}`}>
-                <h3 className="font-serif text-xs sm:text-lg font-semibold mb-1 sm:mb-2 line-clamp-2 group-hover:text-raspberry transition-colors">
-                  {product.name}
-                </h3>
+                <div className="relative aspect-square overflow-hidden bg-muted/30">
+                  <Image
+                    src={product.images?.[0] || '/placeholder.svg'}
+                    alt={product.name}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                </div>
               </Link>
+              <CardContent className="p-2 sm:p-4 md:p-6 space-y-1 sm:space-y-3">
+                <Link href={`/product/${product.slug}`}>
+                  <h3 className="font-serif text-xs sm:text-lg font-semibold mb-1 sm:mb-2 line-clamp-2 group-hover:text-raspberry transition-colors">
+                    {product.name}
+                  </h3>
+                </Link>
 
-              <div className="flex items-center space-x-0.5 sm:space-x-1 mb-1 sm:mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-2.5 w-2.5 sm:h-4 sm:w-4 fill-gold text-gold" />
-                ))}
-              </div>
+                <div className="flex items-center space-x-0.5 sm:space-x-1 mb-1 sm:mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="h-2.5 w-2.5 sm:h-4 sm:w-4 fill-gold text-gold"
+                    />
+                  ))}
+                </div>
 
-              <div className="flex items-center justify-between">
-                <p className="text-sm sm:text-xl font-bold text-primary leading-tight">
-                  Rs. {product.price.toLocaleString()}
-                </p>
-                <Button
-                  size="sm"
-                  onClick={() => addItem(product.id)}
-                  className="text-[10px] sm:text-sm px-2 sm:px-4 py-1 sm:py-2 hover:bg-raspberry"
-                >
-                  Add to Cart
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                <div className="flex items-center justify-between gap-1 sm:gap-2">
+                  <p className="text-xs sm:text-xl font-bold text-primary leading-tight whitespace-nowrap">
+                    Rs. {product.price.toLocaleString()}
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => addItem(product.id)}
+                    className="text-[9px] sm:text-sm px-2 sm:px-4 py-1 sm:py-2 hover:bg-raspberry whitespace-nowrap"
+                  >
+                    Add to Cart
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     )}
 
@@ -171,6 +184,23 @@ export default function HomePage() {
     </div>
   </div>
 </section>
+
+<style jsx global>{`
+  @keyframes scroll-x {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll-x {
+    animation: scroll-x 40s linear infinite;
+  }
+`}</style>
+
+
 
 
       {/* ✅ SHOP BY CATEGORY */}
@@ -233,78 +263,96 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ✅ TRENDING PRODUCTS */}
-      <section className="py-20 sm:py-24 lg:py-32 bg-gradient-to-b from-muted/30 to-white">
-        <div className="container mx-auto px-4">
-          <div className="mb-10 sm:mb-16 flex flex-col sm:flex-row items-center justify-between text-center sm:text-left">
-            <div>
-              <h2 className="font-serif text-3xl sm:text-5xl font-bold mb-2 sm:mb-4">
-                Trending Now
-              </h2>
-              <p className="text-sm sm:text-lg text-muted-foreground leading-relaxed">
-                Most loved pieces by our customers
-              </p>
-            </div>
-            <Button variant="ghost" asChild className="hidden sm:flex hover:bg-baby-pink">
-              <Link href="/category/bridal-clutches">
-                View All
-                <ArrowRight className="ml-2 h-4 w-4" />
+
+
+{/* ✅ TRENDING PRODUCTS */}
+<section className="py-20 sm:py-24 lg:py-32 bg-gradient-to-b from-muted/30 to-white overflow-hidden">
+  <div className="container mx-auto px-4">
+    <div className="mb-10 sm:mb-16 flex flex-col sm:flex-row items-center justify-between text-center sm:text-left">
+      <div>
+        <h2 className="font-serif text-3xl sm:text-5xl font-bold mb-2 sm:mb-4">
+          Trending Now
+        </h2>
+        <p className="text-sm sm:text-lg text-muted-foreground leading-relaxed">
+          Most loved pieces by our customers
+        </p>
+      </div>
+      <Button variant="ghost" asChild className="hidden sm:flex hover:bg-baby-pink">
+        <Link href="/category/bridal-clutches">
+          View All
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </Button>
+    </div>
+
+    {loading ? (
+      <div className="flex justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-raspberry"></div>
+      </div>
+    ) : (
+      <div className="relative w-full overflow-hidden">
+        {/* ✅ Motion Wrapper for Continuous Scroll */}
+        <motion.div
+          className="flex gap-4 sm:gap-6 w-max"
+          animate={{
+            x: ["0%", "-50%"],
+          }}
+          transition={{
+            ease: "linear",
+            duration: 25, // slower for smoother motion
+            repeat: Infinity,
+          }}
+        >
+          {/* ✅ Duplicate for seamless loop */}
+          {[...trendingProducts.slice(0, 5), ...trendingProducts.slice(0, 5)].map((product, i) => (
+            <Card
+              key={`${product.id}-${i}`}
+              className="group min-w-[180px] sm:min-w-[220px] md:min-w-[250px] overflow-hidden border-0 shadow-md hover:shadow-xl transition-all hover:bg-baby-pink/30 duration-500 flex-shrink-0"
+            >
+              <Link href={`/product/${product.slug}`}>
+                {/* ✅ FIXED IMAGE SIZE */}
+                <div className="relative w-full h-[220px] sm:h-[260px] md:h-[280px] overflow-hidden bg-muted flex items-center justify-center">
+                  <Badge className="absolute left-3 top-3 z-10 bg-raspberry/90 text-white shadow-lg">
+                    <Sparkles className="mr-1 h-3 w-3" />
+                    Trending
+                  </Badge>
+                  <Image
+                    src={product.images?.[0] || "/placeholder.svg"}
+                    alt={product.name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
               </Link>
-            </Button>
-          </div>
 
-          {loading ? (
-            <div className="flex justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-raspberry"></div>
-            </div>
-          ) : (
-            <div className="grid gap-4 grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {trendingProducts.slice(0, 5).map((product) => (
-                <Card
-                  key={product.id}
-                  className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all hover:bg-baby-pink/30 duration-500"
-                >
-                  <Link href={`/product/${product.slug}`}>
-                    <div className="relative aspect-square overflow-hidden bg-muted">
-                      <Badge className="absolute left-3 top-3 z-10 bg-raspberry/90 text-white shadow-lg">
-                        <Sparkles className="mr-1 h-3 w-3" />
-                        Trending
-                      </Badge>
-                      <Image
-                        src={product.images?.[0] || "/placeholder.svg"}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                    </div>
-                  </Link>
-                  <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3 bg-white group-hover:bg-baby-pink/50 transition-colors duration-500">
-                    <Link href={`/product/${product.slug}`}>
-                      <h3 className="font-semibold text-xs sm:text-base line-clamp-2 group-hover:text-raspberry transition-colors">
-                        {product.name}
-                      </h3>
-                    </Link>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm sm:text-lg font-bold text-primary">
-                        Rs. {product.price.toLocaleString()}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => addItem(product.id)}
-                        className="h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm hover:bg-raspberry hover:text-white"
-                      >
-                        Add
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+              <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3 bg-white group-hover:bg-baby-pink/50 transition-colors duration-500">
+                <Link href={`/product/${product.slug}`}>
+                  <h3 className="font-semibold text-xs sm:text-base truncate group-hover:text-raspberry transition-colors">
+                    {product.name}
+                  </h3>
+                </Link>
 
+                <div className="flex items-center justify-between">
+                  <p className="text-sm sm:text-lg font-bold text-primary">
+                    Rs. {product.price.toLocaleString()}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => addItem(product.id)}
+                    className="h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm hover:bg-raspberry hover:text-white"
+                  >
+                    Add
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </motion.div>
+      </div>
+    )}
+  </div>
+</section>
 
       {/* OUR STORY SECTION */}
 <section className="bg-gradient-to-br from-baby-pink/20 to-white py-16 sm:py-20 lg:py-32">
