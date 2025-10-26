@@ -181,7 +181,7 @@ export default function CategoryPage({ params }: { params: { category: string } 
   const categoryName =
     categoryNames[params.category as keyof typeof categoryNames] || "Products"
 
-  // 🧩 Fetch products from Supabase
+  // 🧩 Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true)
@@ -202,9 +202,8 @@ export default function CategoryPage({ params }: { params: { category: string } 
     fetchProducts()
   }, [params.category, supabase])
 
-  // 🔄 Sorting logic
+  // 🧠 Sort logic
   let sortedProducts = [...products].sort((a, b) => {
-    // Always show new arrivals first
     const aNew = new Date().getTime() - new Date(a.created_at).getTime() < 7 * 24 * 60 * 60 * 1000
     const bNew = new Date().getTime() - new Date(b.created_at).getTime() < 7 * 24 * 60 * 60 * 1000
     if (aNew && !bNew) return -1
@@ -222,17 +221,27 @@ export default function CategoryPage({ params }: { params: { category: string } 
     }
   })
 
-  // 🧠 Filter logic
+  // 🧩 Filter logic (with stock rules)
   if (filter === "new") {
     sortedProducts = sortedProducts.filter(
       (product) =>
+        product.stock_quantity > 0 &&
         new Date().getTime() - new Date(product.created_at).getTime() <
-        7 * 24 * 60 * 60 * 1000
+          7 * 24 * 60 * 60 * 1000
     )
   } else if (filter === "sale") {
     sortedProducts = sortedProducts.filter(
-      (product) => product.original_price && product.price < product.original_price
+      (product) =>
+        product.stock_quantity > 0 &&
+        product.original_price &&
+        product.price < product.original_price
     )
+  } else if (filter === "all") {
+    // In "All Products" view → show in-stock first, then out-of-stock
+    sortedProducts = [
+      ...sortedProducts.filter((p) => p.stock_quantity > 0),
+      ...sortedProducts.filter((p) => p.stock_quantity === 0),
+    ]
   }
 
   return (
@@ -274,7 +283,6 @@ export default function CategoryPage({ params }: { params: { category: string } 
               </SelectContent>
             </Select>
 
-            {/* Filter Dropdown */}
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by" />
@@ -294,7 +302,7 @@ export default function CategoryPage({ params }: { params: { category: string } 
         </div>
       </div>
 
-      {/* Products Grid */}
+      {/* Products */}
       {loading ? (
         <div className="text-center py-16">
           <p className="text-muted-foreground text-lg">Loading products...</p>
@@ -353,7 +361,6 @@ export default function CategoryPage({ params }: { params: { category: string } 
                       </h3>
                     </Link>
 
-                    {/* Rating Display */}
                     <div className="flex items-center space-x-1 mb-1 sm:mb-2">
                       {averageRating ? (
                         <>
@@ -379,7 +386,6 @@ export default function CategoryPage({ params }: { params: { category: string } 
                     </div>
                   </div>
 
-                  {/* Price and Cart */}
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5 sm:space-y-1">
                       <p className="text-base sm:text-lg font-bold text-primary">
@@ -416,3 +422,4 @@ export default function CategoryPage({ params }: { params: { category: string } 
     </div>
   )
 }
+
