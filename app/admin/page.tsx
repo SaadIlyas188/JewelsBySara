@@ -1,40 +1,118 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Package, ShoppingCart, Users, TrendingUp } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { products } from "@/lib/mock-data"
-import type { Order } from "@/lib/types"
 
 export default function AdminDashboard() {
-  const [orders, setOrders] = useState<Order[]>([])
+  const supabase = createClientComponentClient()
+
+  const [loading, setLoading] = useState(true)
+  const [orders, setOrders] = useState([])
+  const [users, setUsers] = useState([])
+  const [products, setProducts] = useState([])
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalRevenue: 0,
-    totalProducts: products.length,
-    pendingOrders: 0,
+    orderStatusCounts: {},
+    totalUsers: 0,
+    activeUsers: 0,
+    inactiveUsers: 0,
+    totalProducts: 0,
+    categoryCounts: {},
   })
-  const [totalUsers, setTotalUsers] = useState(0)
 
   useEffect(() => {
-    const allOrders: Order[] = JSON.parse(localStorage.getItem("jewelsbysara-orders") || "[]")
-    const allUsers = JSON.parse(localStorage.getItem("jewelsbysara-users") || "[]")
+    const fetchData = async () => {
+      setLoading(true)
 
-    setOrders(allOrders)
-    setTotalUsers(allUsers.length)
+      // Fetch all three tables
+      const { data: ordersData, error: ordersError } = await supabase
+        .from("orders")
+        .select("*")
 
-    const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0)
-    const pendingOrders = allOrders.filter((order) => order.status === "pending").length
+      const { data: usersData, error: usersError } = await supabase
+        .from("profiles")
+        .select("*")
 
-    setStats({
-      totalOrders: allOrders.length,
-      totalRevenue,
-      totalProducts: products.length,
-      pendingOrders,
-    })
-  }, [])
+      const { data: productsData, error: productsError } = await supabase
+        .from("products")
+        .select("*")
+
+      if (ordersError || usersError || productsError) {
+        console.error("Error fetching dashboard data:", {
+          ordersError,
+          usersError,
+          productsError,
+        })
+        setLoading(false)
+        return
+      }
+
+      // ---- ORDERS ----
+      let totalRevenue = 0
+      let orderStatusCounts: Record<string, number> = {}
+
+      for (const order of ordersData) {
+        const statusArray = order.status || []
+        let lastStatus = "unknown"
+
+        if (statusArray.length > 0) {
+          lastStatus = statusArray[statusArray.length - 1].status
+        }
+
+        // Count order status
+        orderStatusCounts[lastStatus] = (orderStatusCounts[lastStatus] || 0) + 1
+
+        // ✅ Include only delivered orders in total revenue
+        if (lastStatus.toLowerCase() === "delivered") {
+          totalRevenue += Number(order.total)
+        }
+      }
+
+      // ---- USERS ----
+      const totalUsers = usersData.length
+      const activeUsers = usersData.filter((u) => u.active === true).length
+      const inactiveUsers = totalUsers - activeUsers
+
+      // ---- PRODUCTS ----
+      const totalProducts = productsData.length
+      const categoryCounts: Record<string, number> = {}
+      for (const product of productsData) {
+        categoryCounts[product.category] =
+          (categoryCounts[product.category] || 0) + 1
+      }
+
+      setOrders(ordersData)
+      setUsers(usersData)
+      setProducts(productsData)
+      setStats({
+        totalOrders: ordersData.length,
+        totalRevenue,
+        orderStatusCounts,
+        totalUsers,
+        activeUsers,
+        inactiveUsers,
+        totalProducts,
+        categoryCounts,
+      })
+
+      setLoading(false)
+    }
+
+    fetchData()
+  }, [supabase])
 
   const recentOrders = orders.slice(0, 5)
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-80">
+        <div className="animate-spin h-12 w-12 border-4 border-t-raspberry rounded-full"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8 px-4 sm:px-6 md:px-8 pb-8 w-full max-w-7xl mx-auto">
@@ -48,8 +126,9 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Overview */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Revenue */}
         <Card className="p-2 sm:p-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs sm:text-sm font-medium">Total Revenue</CardTitle>
@@ -60,11 +139,12 @@ export default function AdminDashboard() {
               Rs. {stats.totalRevenue.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              From {stats.totalOrders} orders
+              From delivered orders only
             </p>
           </CardContent>
         </Card>
 
+        {/* Orders */}
         <Card className="p-2 sm:p-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs sm:text-sm font-medium">Total Orders</CardTitle>
@@ -72,10 +152,15 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-xl sm:text-2xl font-bold">{stats.totalOrders}</div>
-            <p className="text-xs text-muted-foreground">{stats.pendingOrders} pending</p>
+            <p className="text-xs text-muted-foreground">
+              {Object.entries(stats.orderStatusCounts)
+                .map(([status, count]) => `${status}: ${count}`)
+                .join(", ")}
+            </p>
           </CardContent>
         </Card>
 
+        {/* Products */}
         <Card className="p-2 sm:p-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs sm:text-sm font-medium">Products</CardTitle>
@@ -83,18 +168,25 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-xl sm:text-2xl font-bold">{stats.totalProducts}</div>
-            <p className="text-xs text-muted-foreground">Active listings</p>
+            <p className="text-xs text-muted-foreground">
+              {Object.entries(stats.categoryCounts)
+                .map(([cat, count]) => `${cat}: ${count}`)
+                .join(", ")}
+            </p>
           </CardContent>
         </Card>
 
+        {/* Users */}
         <Card className="p-2 sm:p-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs sm:text-sm font-medium">Customers</CardTitle>
             <Users className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Registered users</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              Active: {stats.activeUsers}, Inactive: {stats.inactiveUsers}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -107,29 +199,33 @@ export default function AdminDashboard() {
         <CardContent>
           {recentOrders.length > 0 ? (
             <div className="space-y-4 divide-y">
-              {recentOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3"
-                >
-                  <div className="space-y-1">
-                    <p className="text-sm sm:text-base font-medium">
-                      Order #{order.trackingNumber}
-                    </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                      {order.shippingAddress.name}
-                    </p>
+              {recentOrders.map((order: any) => {
+                const lastStatus =
+                  order.status?.[order.status.length - 1]?.status || "unknown"
+                return (
+                  <div
+                    key={order.id}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3"
+                  >
+                    <div className="space-y-1">
+                      <p className="text-sm sm:text-base font-medium">
+                        Order #{order.tracking_number}
+                      </p>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                        {order.first_name} {order.last_name}
+                      </p>
+                    </div>
+                    <div className="text-left sm:text-right mt-2 sm:mt-0">
+                      <p className="text-sm sm:text-base font-medium">
+                        Rs. {Number(order.total).toLocaleString()}
+                      </p>
+                      <p className="text-xs sm:text-sm text-muted-foreground capitalize">
+                        {lastStatus}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-left sm:text-right mt-2 sm:mt-0">
-                    <p className="text-sm sm:text-base font-medium">
-                      Rs. {order.total.toLocaleString()}
-                    </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground capitalize">
-                      {order.status}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <p className="text-center text-sm sm:text-base text-muted-foreground py-8">
