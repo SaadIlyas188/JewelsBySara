@@ -31,6 +31,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const [selectedStars, setSelectedStars] = useState(0)
   const [editingReview, setEditingReview] = useState<any>(null)
   const [userReview, setUserReview] = useState<any>(null)
+  const [isWishlisted, setIsWishlisted] = useState(false)
+
 
 
 
@@ -51,6 +53,19 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
       }
 
       setProduct(product)
+      // ✅ Check if product is already in wishlist
+if (user) {
+  const { data: wishlistData, error: wishlistError } = await supabase
+    .from("wishlist")
+    .select("product_ids")
+    .eq("user_email", user.email)
+    .single()
+
+  if (!wishlistError && wishlistData?.product_ids?.includes(product.id)) {
+    setIsWishlisted(true)
+  }
+}
+
 
       // Fetch related products (same category, excluding current)
       const { data: related } = await supabase
@@ -370,69 +385,65 @@ const isNewArrival =
               <Button size="lg" className="flex-1 h-12" onClick={handleAddToCart} disabled={!product.in_stock}>
                 Add to Cart
               </Button>
-              <Button
+             <Button
   size="lg"
   variant="outline"
-  className="h-12 bg-transparent flex items-center justify-center"
+  className={`h-12 bg-transparent flex items-center justify-center ${isWishlisted ? "bg-pink-50" : ""}`}
   onClick={async () => {
     if (!user) {
       toast.error("Please log in to add to wishlist")
-
       return
     }
 
     try {
-      // Check if wishlist exists for this user
       const { data: existingWishlist, error: fetchError } = await supabase
         .from("wishlist")
         .select("product_ids")
         .eq("user_email", user.email)
         .single()
 
-      if (fetchError && fetchError.code !== "PGRST116") {
-        // Supabase code PGRST116 = no rows found
-        throw fetchError
-      }
+      if (fetchError && fetchError.code !== "PGRST116") throw fetchError
 
+      let newProductIds: number[] = []
       if (!existingWishlist) {
-        // Create a new wishlist row
-        const { error: insertError } = await supabase
-          .from("wishlist")
-          .insert([{ user_email: user.email, product_ids: [product.id] }])
-
-        if (insertError) throw insertError
+        newProductIds = [product.id]
+        await supabase.from("wishlist").insert([{ user_email: user.email, product_ids: newProductIds }])
       } else {
-        // Append to existing array if not already added
-        const newProductIds = Array.isArray(existingWishlist.product_ids)
+        newProductIds = Array.isArray(existingWishlist.product_ids)
           ? [...existingWishlist.product_ids]
           : []
 
-        if (!newProductIds.includes(product.id)) {
-          newProductIds.push(product.id)
-          const { error: updateError } = await supabase
-            .from("wishlist")
-            .update({ product_ids: newProductIds })
-            .eq("user_email", user.email)
-
-          if (updateError) throw updateError
+        if (newProductIds.includes(product.id)) {
+          // Remove from wishlist
+          newProductIds = newProductIds.filter((id) => id !== product.id)
+          toast.success("Removed from wishlist")
+          setIsWishlisted(false)
         } else {
-          toast("Product already in wishlist")
-          return
+          // Add to wishlist
+          newProductIds.push(product.id)
+          toast.success("Added to wishlist")
+          setIsWishlisted(true)
         }
+
+        await supabase
+          .from("wishlist")
+          .update({ product_ids: newProductIds })
+          .eq("user_email", user.email)
       }
-
-      toast.success("Added to wishlist!")
-
     } catch (err: any) {
       console.error(err)
-      toast.error(`Failed to add to wishlist: ${err.message}`)
-
+      toast.error(`Failed to update wishlist: ${err.message}`)
     }
   }}
 >
-  <Heart className="h-5 w-5 text-pink-500" />
-  <span className="sr-only">Add to wishlist</span>
+  <Heart
+    className={`h-5 w-5 transition-all duration-200 ${
+      isWishlisted ? "fill-pink-500 text-pink-500" : "text-pink-500"
+    }`}
+  />
+  <span className="sr-only">Toggle wishlist</span>
 </Button>
+
 
            <Button
       size="lg"
@@ -443,7 +454,7 @@ const isNewArrival =
       <Share2 className="h-5 w-5" />
       <span className="sr-only">Share</span>
     </Button>
-    
+
 
             </div>
           </div>

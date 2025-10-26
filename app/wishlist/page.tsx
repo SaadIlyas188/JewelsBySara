@@ -164,7 +164,7 @@ export default function WishlistPage() {
 
             <h2 className="font-semibold text-lg">{product.name}</h2>
             <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{product.description}</p>
-            <p className="font-medium mb-4">${product.price.toFixed(2)}</p>
+            <p className="font-medium mb-4">Rs. {product.price.toFixed(2)}</p>
             <div className="mt-auto flex gap-2">
               <Link href={`/product/${product.slug}`}>
                 <Button variant="outline" className="flex-1">

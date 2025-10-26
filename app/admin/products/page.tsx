@@ -717,146 +717,186 @@ export default function AdminProductsPage() {
     count: products.filter((p) => p.category === cat.value).length,
   }))
 
-  return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Products
-          </h1>
-          <p className="text-muted-foreground">Manage your product inventory</p>
-        </div>
-
-        <Button
-          onClick={() => router.push("/admin/products/add")}
-          className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Product
-        </Button>
+return (
+  <div className="space-y-8 animate-in fade-in duration-500">
+    {/* Header */}
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h1 className="font-serif text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Products
+        </h1>
+        <p className="text-muted-foreground">Manage your product inventory</p>
       </div>
 
-      {/* Category Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {productsByCategory.map((cat) => (
-          <Card key={cat.value} className="hover:shadow-lg transition-all duration-300 hover:scale-105">
-            <CardHeader>
-              <CardTitle className="text-lg">{cat.label}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {cat.count}
-              </p>
-              <p className="text-sm text-muted-foreground">Products</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Product Tabs */}
-      <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-        <TabsList className="grid w-full grid-cols-4">
-          {categories.map((cat) => (
-            <TabsTrigger key={cat.value} value={cat.value}>
-              {cat.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {categories.map((cat) => (
-          <TabsContent key={cat.value} value={cat.value} className="space-y-4">
-  {loading ? (
-    // Loader while fetching products
-    <div className="col-span-full flex justify-center py-20">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
+      <Button
+        onClick={() => router.push("/admin/products/add")}
+        className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl"
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        Add Product
+      </Button>
     </div>
-  ) : filteredProducts.length === 0 ? (
-    // Empty state if no products in this category
-    <Card>
-      <CardContent className="py-12 text-center text-muted-foreground">
-        No products found in this category
-      </CardContent>
-    </Card>
-  ) : (
-    // Product grid when products are loaded
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredProducts.map((product) => (
-        <Card key={product.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden">
-          <div className="relative h-48 overflow-hidden">
-            <Image
-              src={product.images[0] || "/placeholder.svg"}
-              alt={product.name}
-              fill
-              className="object-cover group-hover:scale-110 transition-transform duration-300"
-            />
-            {product.stock_quantity === 0 && (
-              <Badge className="absolute top-2 right-2 bg-destructive">Out of Stock</Badge>
-            )}
-          </div>
-          <CardContent className="p-4 space-y-3">
-            <div>
-              <h3 className="font-semibold text-lg line-clamp-1">{product.name}</h3>
-              <p className="text-sm text-muted-foreground capitalize">{product.category.replace("-", " ")}</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xl font-bold">Rs. {product.price.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">Stock: {product.stock_quantity}</p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="icon" onClick={() => handleEdit(product)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="text-destructive bg-transparent"
-                  onClick={() => handleDelete(product.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+
+    {/* Category Cards */}
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+      {productsByCategory.map((cat) => (
+        <Card key={cat.value} className="hover:shadow-lg transition-all duration-300 hover:scale-105 rounded-xl">
+          <CardHeader>
+            <CardTitle className="text-sm sm:text-lg text-center">{cat.label}</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {cat.count}
+            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Products</p>
           </CardContent>
         </Card>
       ))}
     </div>
-  )}
-</TabsContent>
 
-        ))}
-      </Tabs>
-    </div>
-  )
+    {/* Filters */}
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <Filter className="mr-2 h-4 w-4" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Product Tabs */}
+<Tabs
+  value={selectedCategory}
+  onValueChange={setSelectedCategory}
+  className="relative z-10"
+>
+  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6">
+    {categories.map((cat) => (
+      <TabsTrigger key={cat.value} value={cat.value}>
+        {cat.label}
+      </TabsTrigger>
+    ))}
+  </TabsList>
+
+  {categories.map((cat) => (
+    <TabsContent
+      key={cat.value}
+      value={cat.value}
+      className="relative mt-8 space-y-4"
+    >
+      {loading ? (
+        <div className="col-span-full flex justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            No products found in this category
+          </CardContent>
+        </Card>
+      ) : (
+        <div
+          className="
+            grid 
+            grid-cols-2 
+            sm:grid-cols-3 
+            md:grid-cols-3 
+            lg:grid-cols-4 
+            xl:grid-cols-5 
+            gap-3 
+            sm:gap-4 
+            md:gap-6
+          "
+        >
+          {filteredProducts.map((product) => (
+            <Card
+              key={product.id}
+              className="group hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl text-sm sm:text-base"
+            >
+              <div className="relative aspect-square overflow-hidden">
+                <Image
+                  src={product.images[0] || '/placeholder.svg'}
+                  alt={product.name}
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-300"
+                />
+                {product.stock_quantity === 0 && (
+                  <Badge className="absolute top-2 right-2 bg-destructive text-xs sm:text-sm">
+                    Out of Stock
+                  </Badge>
+                )}
+              </div>
+
+              <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-sm sm:text-base truncate">
+                    {product.name}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground capitalize">
+                    {product.category.replace('-', ' ')}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 sm:gap-3">
+                  <div>
+                    <p className="text-base sm:text-lg font-bold">
+                      Rs. {product.price.toLocaleString()}
+                    </p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Stock: {product.stock_quantity}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-1 sm:gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="w-7 h-7 sm:w-8 sm:h-8"
+                      onClick={() => handleEdit(product)}
+                    >
+                      <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="w-7 h-7 sm:w-8 sm:h-8 text-destructive"
+                      onClick={() => handleDelete(product.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </TabsContent>
+  ))}
+</Tabs>
+
+
+  </div>
+)
 }

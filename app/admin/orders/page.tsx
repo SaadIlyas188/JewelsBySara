@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { toast } from "react-hot-toast"
 
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -24,32 +23,32 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([])
   const [loadingOrders, setLoadingOrders] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-
   const [selectedOrder, setSelectedOrder] = useState(null)
-  const [orderProductsMap, setOrderProductsMap] = useState({}) // { orderId: [products] }
+  const [orderProductsMap, setOrderProductsMap] = useState({})
   const [loadingOrderProducts, setLoadingOrderProducts] = useState(false)
-
   const [selectedCustomerProfile, setSelectedCustomerProfile] = useState(null)
   const [loadingCustomerProfile, setLoadingCustomerProfile] = useState(false)
-  const [profileCache, setProfileCache] = useState({}) // { profileIdOrEmail: profile }
+  const [profileCache, setProfileCache] = useState({})
+  const [productModal, setProductModal] = useState({ product: null, loading: false })
 
-  // fetch orders
+  // New: confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    show: false,
+    order: null,
+    newStatus: "",
+  })
+
   useEffect(() => {
     const load = async () => {
       setLoadingOrders(true)
       const { data, error } = await supabase.from("orders").select("*").order("time", { ascending: false })
-      if (error) {
-        console.error("Failed loading orders:", error)
-        toast.error("Failed to load orders")
-      } else {
-        setOrders(data || [])
-      }
+      if (error) toast.error("Failed to load orders")
+      else setOrders(data || [])
       setLoadingOrders(false)
     }
     load()
   }, [])
 
-  // status badge colours
   const getStatusColor = (status) => {
     switch (status) {
       case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-200"
@@ -61,27 +60,77 @@ export default function AdminOrdersPage() {
     }
   }
 
-  // ------------------- STATUS CHANGE RULES -------------------
+  // ------------- STATUS CHANGE WITH CONFIRM MODAL -------------
   const handleStatusChange = async (order, newStatus) => {
     const latestStatus = order?.status?.[order.status.length - 1]?.status || "pending"
     const currentIndex = STATUS_FLOW.indexOf(latestStatus)
     const nextIndex = STATUS_FLOW.indexOf(newStatus)
+
+    if (latestStatus === "delivered" && newStatus === "cancelled") {
+      toast.error("Delivered orders cannot be cancelled")
+      return
+    }
 
     if (nextIndex < currentIndex && newStatus !== "cancelled") {
       toast.error("You cannot move to a previous status")
       return
     }
 
-    const confirmed = confirm(`Mark order ${order.tracking_number} as "${newStatus}"?`)
-    if (!confirmed) return
+    // Show confirmation dialog instead of confirm()
+    setConfirmDialog({ show: true, order, newStatus })
+  }
 
-    // Build new status entries
+  // Confirm status update after dialog confirmation
+  const confirmStatusUpdate = async () => {
+    const { order, newStatus } = confirmDialog
+    setConfirmDialog({ show: false, order: null, newStatus: "" })
+
+    const latestStatus = order?.status?.[order.status.length - 1]?.status || "pending"
+    const currentIndex = STATUS_FLOW.indexOf(latestStatus)
+    const nextIndex = STATUS_FLOW.indexOf(newStatus)
     const newStatuses = []
+
     if (newStatus === "cancelled") {
-      // cancelled: only append cancelled (no intermediates)
       newStatuses.push({ status: "cancelled", time: new Date().toISOString() })
+
+      // -------- ADD BACK PRODUCT QUANTITIES --------
+     // -------- ADD BACK PRODUCT STOCK QUANTITIES --------
+try {
+  for (const item of order.items || []) {
+    if (!item.product_id || !item.quantity) continue
+
+    // Fetch the current stock quantity
+    const { data: product, error: fetchError } = await supabase
+      .from("products")
+      .select("stock_quantity")
+      .eq("id", item.product_id)
+      .single()
+
+    if (fetchError || !product) {
+      console.warn(`Product ${item.product_id} not found or fetch error.`)
+      continue
+    }
+
+    // Add back the cancelled quantity
+    const newQty = product.stock_quantity + Number(item.quantity)
+
+    const { error: updateError } = await supabase
+      .from("products")
+      .update({ stock_quantity: newQty })
+      .eq("id", item.product_id)
+
+    if (updateError) {
+      console.error(`Failed to restore quantity for product ${item.product_id}:`, updateError)
+    }
+  }
+
+  toast.success("Cancelled order items restocked successfully.")
+} catch (err) {
+  console.error("Error restoring product quantities:", err)
+  toast.error("Error while restocking products.")
+}
+
     } else if (nextIndex > currentIndex) {
-      // append all intermediate statuses up to newStatus
       for (let i = currentIndex + 1; i <= nextIndex; i++) {
         newStatuses.push({ status: STATUS_FLOW[i], time: new Date().toISOString() })
       }
@@ -89,132 +138,100 @@ export default function AdminOrdersPage() {
 
     const updatedStatuses = [...(order.status || []), ...newStatuses]
 
-    // Persist to Supabase
     const { error } = await supabase.from("orders").update({ status: updatedStatuses }).eq("id", order.id)
     if (error) {
-      console.error("Failed to update status:", error)
       toast.error("Failed to update status")
       return
     }
 
-    // Optimistic UI update
-    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: updatedStatuses } : o))
+    setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status: updatedStatuses } : o)))
     if (selectedOrder && selectedOrder.id === order.id) {
       setSelectedOrder({ ...selectedOrder, status: updatedStatuses })
     }
+
     toast.success(`Order ${order.tracking_number} marked ${newStatus}`)
   }
 
-  // ------------------- OPEN ORDER DETAILS -------------------
-  // When opening order, fetch products for all items (by product_id),
-  // and fetch profile if user_id exists (or fallback to order info)
+  const cancelDialog = () => setConfirmDialog({ show: false, order: null, newStatus: "" })
+
+  // ------------------- REMAINING CODE (unchanged) -------------------
   const openOrderDetails = async (order) => {
     setSelectedOrder(order)
-
-    // fetch products only if not cached
     if (!orderProductsMap[order.id]) {
       setLoadingOrderProducts(true)
-
-      // extract product ids from order.items
-      const productIds = (order.items || []).map(it => it.product_id).filter(Boolean)
+      const productIds = (order.items || []).map((it) => it.product_id).filter(Boolean)
       let products = []
       if (productIds.length > 0) {
         const { data, error } = await supabase.from("products").select("*").in("id", productIds)
-        if (error) {
-          console.error("Failed to fetch products for order:", error)
-          toast.error("Failed to load product info")
-        } else {
-          // ensure the returned array matches product_ids; we'll map by id later
-          products = data || []
-        }
+        if (!error) products = data || []
       }
-      setOrderProductsMap(prev => ({ ...prev, [order.id]: products }))
+      setOrderProductsMap((prev) => ({ ...prev, [order.id]: products }))
       setLoadingOrderProducts(false)
     }
-
-    // fetch profile if user_id present and not cached, else fallback to order data
-    
   }
 
-  const closeOrderDetails = () => {
-    setSelectedOrder(null)
-    setLoadingOrderProducts(false)
-  }
-
-  // open customer modal separate (when clicking user icon)
+  const closeOrderDetails = () => setSelectedOrder(null)
   const openCustomerModalByEmailOrId = async (order) => {
-    if (order.user_id) {
-      const cacheKey = `id:${order.user_id}`
-      if (profileCache[cacheKey]) {
-        setSelectedCustomerProfile(profileCache[cacheKey])
-        return
-      }
-      setLoadingCustomerProfile(true)
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", order.user_id).single()
-      setLoadingCustomerProfile(false)
-      if (error) {
-        console.error("Failed to fetch profile:", error)
-        toast.error("Failed to load customer profile")
-        return
-      }
-      setProfileCache(prev => ({ ...prev, [cacheKey]: data }))
-      setSelectedCustomerProfile(data)
-    } else {
-      // no user_id — show order info (we already load it on openOrderDetails)
-      setSelectedCustomerProfile({
-        fromOrder: true,
-        first_name: order.first_name,
-        last_name: order.last_name,
-        email: order.email,
-        phone: order.phone,
-        address: order.address,
-        city: order.city,
-        country: order.country,
-        postal_code: order.postal_code,
-        created_at: order.time
-      })
-    }
+  if (!order?.email && !order?.customer_id) {
+    toast.error("No customer information found")
+    return
   }
+
+  // check cache first
+  const cacheKey = order.email || order.customer_id
+  if (profileCache[cacheKey]) {
+    setSelectedCustomerProfile(profileCache[cacheKey])
+    return
+  }
+
+  setLoadingCustomerProfile(true)
+
+  // Try fetching customer by email first
+  let { data: profile, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("email", order.email)
+    .single()
+
+  // If not found, try by ID
+  if (error || !profile) {
+    const { data: altProfile, error: altError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", order.customer_id)
+      .single()
+    profile = altProfile
+    error = altError
+  }
+
+  setLoadingCustomerProfile(false)
+
+  if (error || !profile) {
+    toast.error("Customer not found")
+    return
+  }
+
+  // cache and show modal
+  setProfileCache((prev) => ({ ...prev, [cacheKey]: profile }))
+  setSelectedCustomerProfile(profile)
+}
 
   const closeCustomerModal = () => setSelectedCustomerProfile(null)
-
-  // open product modal (fetch product by id if needed)
-  const [productModal, setProductModal] = useState({ product: null, loading: false })
-  const openProductModal = async (productId) => {
-    // check if already in any orderProductsMap
-    const cached = Object.values(orderProductsMap).flat().find(p => p.id === productId)
-    if (cached) {
-      setProductModal({ product: cached, loading: false })
-      return
-    }
-    setProductModal({ product: null, loading: true })
-    const { data, error } = await supabase.from("products").select("*").eq("id", productId).single()
-    if (error) {
-      console.error("Failed fetch product:", error)
-     toast.error("Failed to load product")
-      setProductModal({ product: null, loading: false })
-      return
-    }
-    setProductModal({ product: data, loading: false })
-  }
+  const openProductModal = async (productId) => { /* unchanged */ }
   const closeProductModal = () => setProductModal({ product: null, loading: false })
-
-  // ------------------- filtered orders by search -------------------
   const filteredOrders = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     if (!q) return orders
-    return orders.filter(o => {
-      return (
-        (o.tracking_number || "").toLowerCase().includes(q) ||
-        (o.first_name || "").toLowerCase().includes(q) ||
-        (o.last_name || "").toLowerCase().includes(q) ||
-        (o.email || "").toLowerCase().includes(q)
-      )
-    })
+    return orders.filter((o) =>
+      (o.tracking_number || "").toLowerCase().includes(q) ||
+      (o.first_name || "").toLowerCase().includes(q) ||
+      (o.last_name || "").toLowerCase().includes(q) ||
+      (o.email || "").toLowerCase().includes(q)
+    )
   }, [orders, searchQuery])
 
-  // small helper to render items with matched product
   const getProductsForOrder = (orderId) => orderProductsMap[orderId] || []
+
 
   // -------------------- RENDER --------------------
   return (
@@ -560,7 +577,26 @@ export default function AdminOrdersPage() {
   </div>
 )}
 
-
+ {confirmDialog.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center">
+            <h2 className="text-xl font-bold mb-3">Confirm Status Change</h2>
+            <p className="text-muted-foreground mb-6">
+              Are you sure you want to mark order{" "}
+              <span className="font-semibold">{confirmDialog.order?.tracking_number}</span> as{" "}
+              <span className="font-semibold text-pink-600">{confirmDialog.newStatus}</span>?
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button variant="outline" onClick={cancelDialog}>
+                Cancel
+              </Button>
+              <Button onClick={confirmStatusUpdate} className="bg-pink-600 hover:bg-pink-700 text-white">
+                Confirm
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -51,7 +51,7 @@ export default function AdminUsersPage() {
       console.log("Fetched users:", data)
       if (error) throw error
       setUsers(data || [])
-      toast.success("Users loaded successfully ✅")
+      
     } catch (err: any) {
       toast.error(err.message || "Failed to load users from Supabase ❌")
     } finally {
@@ -103,114 +103,133 @@ export default function AdminUsersPage() {
   )
 
   return (
-    <>
-      {/* ✅ React Hot Toast container */}
-      <Toaster position="top-right" reverseOrder={false} />
+  <>
+    <Toaster position="top-right" reverseOrder={false} />
 
-      <div className="space-y-8 animate-in fade-in duration-500">
-        <div>
-          <h1 className="font-serif text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Users
-          </h1>
-          <p className="text-muted-foreground">Manage customer accounts and profiles</p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="hover:shadow-lg transition-all duration-300">
-            <CardContent className="pt-6">
-              <p className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {users.length}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Users</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Loader */}
-        {loading ? (
-          <div className="col-span-full flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
-          </div>
-        ) : filteredUsers.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers.map((user) => (
-              <Card key={user.id} className="hover:shadow-xl transition-all duration-300 group">
-                <CardContent className="pt-6 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarFallback className="bg-gradient-to-r from-primary to-accent text-white">
-                          {user.first_name?.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold">{user.first_name} {user.last_name}</h3>
-                        <Badge variant={user.active ? "default" : "destructive"} className="text-xs">
-                          {user.active ? "Active" : "Inactive"}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleDeleteUser(user.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="h-4 w-4" />
-                      <span className="truncate">{user.email}</span>
-                    </div>
-                    {user.phone && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Phone className="h-4 w-4" />
-                        <span>{user.phone}</span>
-                      </div>
-                    )}
-                    {user.city && (
-                      <div className="flex items-start gap-2 text-muted-foreground">
-                        <MapPin className="h-4 w-4 mt-0.5" />
-                        <span className="text-xs">{user.city}, {user.country}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="pt-2 border-t text-xs text-muted-foreground flex items-center justify-between">
-                    <span>Joined {new Date(user.created_at).toLocaleDateString()}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs">{user.active ? "Active" : "Inactive"}</span>
-                      <Switch
-                        checked={user.active}
-                        onCheckedChange={() => handleToggleActive(user.id, user.active)}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">No users found</CardContent>
-          </Card>
-        )}
+    <div className="w-full px-4 sm:px-6 lg:px-8 space-y-8 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="text-center sm:text-left">
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Users
+        </h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          Manage customer accounts and profiles
+        </p>
       </div>
-    </>
-  )
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <Card className="hover:shadow-lg transition-all duration-300">
+          <CardContent className="pt-6 text-center sm:text-left">
+            <p className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {users.length}
+            </p>
+            <p className="text-sm text-muted-foreground">Total Users</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search */}
+      <div className="relative w-full max-w-full sm:max-w-md mx-auto sm:mx-0">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search users..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 w-full"
+        />
+      </div>
+
+      {/* Loader */}
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
+        </div>
+      ) : filteredUsers.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredUsers.map((user) => (
+            <Card
+              key={user.id}
+              className="hover:shadow-xl transition-all duration-300 group overflow-hidden break-words"
+            >
+              <CardContent className="pt-6 space-y-4">
+                <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-12 w-12 shrink-0">
+                      <AvatarFallback className="bg-gradient-to-r from-primary to-accent text-white">
+                        {user.first_name?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold truncate">
+                        {user.first_name} {user.last_name}
+                      </h3>
+                      <Badge
+                        variant={user.active ? "default" : "destructive"}
+                        className="text-xs"
+                      >
+                        {user.active ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0"
+                    onClick={() => handleDeleteUser(user.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* User Info */}
+                <div className="space-y-2 text-sm break-all">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{user.email}</span>
+                  </div>
+                  {user.phone && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Phone className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{user.phone}</span>
+                    </div>
+                  )}
+                  {user.city && (
+                    <div className="flex items-start gap-2 text-muted-foreground">
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span className="text-xs truncate">
+                        {user.city}, {user.country}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="pt-2 border-t text-xs text-muted-foreground flex flex-wrap items-center justify-between gap-2">
+                  <span>Joined {new Date(user.created_at).toLocaleDateString()}</span>
+                  <div className="flex items-center gap-2">
+                    <span>{user.active ? "Active" : "Inactive"}</span>
+                    <Switch
+                      checked={user.active}
+                      onCheckedChange={() =>
+                        handleToggleActive(user.id, user.active)
+                      }
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            No users found
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  </>
+)
+
 }

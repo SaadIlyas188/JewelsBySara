@@ -18,20 +18,24 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
   const [itemCount, setItemCount] = useState(0)
+  const [shippingFee, setShippingFee] = useState<number | null>(null)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchCartProducts = async () => {
       setLoading(true)
       const items = getCartItems()
 
+      // 🧺 Empty cart
       if (items.length === 0) {
         setCartItems([])
-        setLoading(false)
         setTotal(0)
         setItemCount(0)
+        setLoading(false)
         return
       }
 
+      // 🛒 Fetch product info
       const ids = items.map((i) => String(i.productId))
       const { data: products, error } = await supabase.from("products").select("*").in("id", ids)
 
@@ -54,6 +58,19 @@ export default function CartPage() {
       setLoading(false)
     }
 
+    // 🚚 Fetch shipping info from DB
+    const fetchShippingSettings = async () => {
+      const { data, error } = await supabase.from("store_settings").select("*").limit(1).single()
+
+      if (error) {
+        console.error("Error fetching store settings:", error)
+      } else {
+        setShippingFee(Number(data.standard_shipping_fee || 0))
+        setFreeShippingThreshold(Number(data.free_shipping_threshold || 0))
+      }
+    }
+
+    fetchShippingSettings()
     fetchCartProducts()
   }, [getCartItems])
 
@@ -66,7 +83,7 @@ export default function CartPage() {
       </div>
     )
 
-  // 🛒 Empty cart section
+  // 🛒 Empty cart
   if (cartItems.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16">
@@ -86,7 +103,11 @@ export default function CartPage() {
     )
   }
 
-  // 🧾 Cart items and summary
+  // 💰 Compute shipping based on settings
+  const isFreeShipping = freeShippingThreshold && total >= freeShippingThreshold
+  const finalShippingFee = isFreeShipping ? 0 : shippingFee || 0
+  const grandTotal = total + finalShippingFee
+
   return (
     <div className="container mx-auto px-4 py-12">
       <h1 className="font-serif text-4xl font-bold mb-8">Shopping Cart</h1>
@@ -170,22 +191,24 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-medium text-green-600">
-                    {total >= 5000 ? "FREE" : `Rs. 500`}
+                  <span className={`font-medium ${isFreeShipping ? "text-green-600" : ""}`}>
+                    {isFreeShipping
+                      ? "FREE"
+                      : shippingFee != null
+                      ? `Rs. ${shippingFee}`
+                      : "Calculating..."}
                   </span>
                 </div>
-                {total < 5000 && (
+                {!isFreeShipping && freeShippingThreshold && (
                   <p className="text-xs text-muted-foreground">
-                    Add Rs. {(5000 - total).toLocaleString()} more for free shipping
+                    Add Rs. {(freeShippingThreshold - total).toLocaleString()} more for free shipping
                   </p>
                 )}
               </div>
               <Separator />
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span className="text-primary">
-                  Rs. {(total + (total >= 5000 ? 0 : 500)).toLocaleString()}
-                </span>
+                <span className="text-primary">Rs. {grandTotal.toLocaleString()}</span>
               </div>
               <Button size="lg" className="w-full h-12" asChild>
                 <Link href="/checkout">

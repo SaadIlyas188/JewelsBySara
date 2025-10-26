@@ -1,18 +1,46 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Facebook, Instagram, Mail, Phone, MapPin } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export function Footer() {
+  const [storeData, setStoreData] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchStoreSettings = async () => {
+      const supabase = createClientComponentClient()
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("*")
+        .limit(1)
+        .single()
+
+      if (error) {
+        console.error("Error fetching store settings:", error)
+      } else {
+        setStoreData(data)
+      }
+    }
+
+    fetchStoreSettings()
+  }, [])
+
   return (
     <footer className="border-t bg-muted/30">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="font-serif text-2xl font-bold text-primary">JewelsBySara</h3>
+            <h3 className="font-serif text-2xl font-bold text-primary">
+              {storeData?.store_name || "JewelsBySara"}
+            </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Exquisite handcrafted bridal accessories for your special day. Quality and elegance in every piece.
+              {storeData?.description ||
+                "Exquisite handcrafted bridal accessories for your special day. Quality and elegance in every piece."}
             </p>
             <div className="flex space-x-4">
               <Link
@@ -110,24 +138,30 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground">Karachi, Pakistan</span>
+                <span className="text-muted-foreground">
+                  {storeData?.address || "Lahore, Pakistan"}
+                </span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-primary flex-shrink-0" />
-                <a href="tel:+923001234567" className="text-muted-foreground hover:text-primary transition-colors">
-                  +92 300 1234567
+                <a
+                  href={`tel:${storeData?.phone || "+923070019293"}`}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {storeData?.phone || "+92 307 0019293"}
                 </a>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-primary flex-shrink-0" />
                 <a
-                  href="mailto:info@jewelsbysara.com"
+                  href={`mailto:${storeData?.email || "info@jewelsbysara.com"}`}
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  info@jewelsbysara.com
+                  {storeData?.email || "info@jewelsbysara.com"}
                 </a>
               </li>
             </ul>
+
             <div className="pt-2">
               <p className="text-xs text-muted-foreground mb-2">Subscribe to our newsletter</p>
               <div className="flex space-x-2">
@@ -143,7 +177,7 @@ export function Footer() {
         <div className="mt-12 border-t pt-8">
           <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} JewelsBySara. All rights reserved.
+              &copy; {new Date().getFullYear()} {storeData?.store_name || "JewelsBySara"}. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">
               <Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">

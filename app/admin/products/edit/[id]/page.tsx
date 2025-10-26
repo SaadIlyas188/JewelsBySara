@@ -181,316 +181,313 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 py-8 px-4 animate-in fade-in duration-700">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/admin/products")}
-            className="hover:bg-accent/10"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="font-serif text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              Edit Product
-            </h1>
-            <p className="text-muted-foreground mt-1">Update your product details</p>
-          </div>
+return (
+  <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 py-6 px-3 sm:py-8 sm:px-6 animate-in fade-in duration-700">
+    <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push("/admin/products")}
+          className="hover:bg-accent/10 mb-2 sm:mb-0"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            Edit Product
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
+            Update your product details
+          </p>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Image Upload Section */}
-          <Card className="overflow-hidden border-2 hover:border-accent/50 transition-all duration-300">
-            <CardContent className="p-8">
-              <Label className="text-lg font-semibold mb-4 block">Product Images</Label>
-
-              {existingImages.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-sm text-muted-foreground mb-3">Current Images</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {existingImages.map((image, index) => (
-                      <div
-                        key={`existing-${index}`}
-                        className="relative group aspect-square rounded-xl overflow-hidden border-2 border-pink-100 hover:border-accent transition-all duration-300 hover:scale-105"
-                      >
-                        <Image
-                          src={image || "/placeholder.svg"}
-                          alt={`Existing ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeExistingImage(index)}
-                          className="absolute top-2 right-2 bg-destructive/90 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Dropzone */}
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`relative border-2 border-dashed rounded-2xl p-12 transition-all duration-300 ${
-                  isDragging
-                    ? "border-accent bg-accent/10 scale-105"
-                    : "border-pink-200 bg-gradient-to-br from-pink-50/50 to-rose-50/50"
-                } hover:border-accent hover:bg-accent/5`}
-                style={{
-                  backgroundImage: isDragging
-                    ? "none"
-                    : "radial-gradient(circle, rgba(251, 207, 232, 0.3) 1px, transparent 1px)",
-                  backgroundSize: "20px 20px",
-                }}
-              >
-                <div className="flex flex-col items-center justify-center text-center space-y-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-full blur-xl opacity-30 animate-pulse" />
-                    <div className="relative bg-gradient-to-br from-primary/10 to-accent/10 p-6 rounded-full">
-                      <Upload className="h-12 w-12 text-primary" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold mb-1">Add more images</p>
-                    <p className="text-sm text-muted-foreground">or click to browse</p>
-                  </div>
-                  <Button type="button" variant="outline" className="relative bg-transparent" asChild>
-                    <label className="cursor-pointer">
-                      Choose Files
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload(e.target.files)}
-                        className="hidden"
-                      />
-                    </label>
-                  </Button>
-                  <p className="text-xs text-muted-foreground">Images will be converted to WebP format</p>
-                </div>
-              </div>
-
-              {/* New Image Previews */}
-              {imagePreviews.length > 0 && (
-                <div className="mt-6">
-                  <p className="text-sm text-muted-foreground mb-3">New Images</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {imagePreviews.map((preview, index) => (
-                      <div
-                        key={`new-${index}`}
-                        className="relative group aspect-square rounded-xl overflow-hidden border-2 border-pink-100 hover:border-accent transition-all duration-300 hover:scale-105"
-                      >
-                        <Image
-                          src={preview || "/placeholder.svg"}
-                          alt={`Preview ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeNewImage(index)}
-                          className="absolute top-2 right-2 bg-destructive/90 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Product Details */}
-          <Card className="overflow-hidden border-2 hover:border-accent/50 transition-all duration-300">
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-serif font-semibold mb-6 flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-accent" />
-                Product Details
-              </h2>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-base">
-                      Product Name *
-                    </Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Elegant Bridal Clutch"
-                      className="h-12"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="category" className="text-base">
-                      Category *
-                    </Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value as Product["category"] })}
-                    >
-                      <SelectTrigger className="h-12">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bridal-clutches">Bridal Clutches</SelectItem>
-                        <SelectItem value="nikkah-pens">Nikkah Pens</SelectItem>
-                        <SelectItem value="nikkah-glasses">Nikkah Glasses</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="price" className="text-base">
-                      Price (Rs.) *
-                    </Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      placeholder="5000"
-                      className="h-12"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="originalPrice" className="text-base">
-                      Original Price (Rs.)
-                    </Label>
-                    <Input
-                      id="originalPrice"
-                      type="number"
-                      value={formData.originalPrice}
-                      onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
-                      placeholder="7000"
-                      className="h-12"
-                    />
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="description" className="text-base">
-                      Description *
-                    </Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Describe your beautiful product..."
-                      rows={6}
-                      className="resize-none"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="stock" className="text-base">
-                      Stock Quantity *
-                    </Label>
-                    <Input
-                      id="stock"
-                      type="number"
-                      value={formData.stockQuantity}
-                      onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
-                      placeholder="50"
-                      className="h-12"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="specs" className="text-base">
-                      Specifications (JSON)
-                    </Label>
-                    <Textarea
-                      id="specs"
-                      value={formData.specifications}
-                      onChange={(e) => setFormData({ ...formData, specifications: e.target.value })}
-                      placeholder='{"Material": "Silk", "Dimensions": "8x5 inches"}'
-                      rows={3}
-                      className="resize-none font-mono text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Toggles */}
-              <div className="flex flex-wrap gap-8 mt-8 pt-6 border-t">
-                <div className="flex items-center gap-3">
-                  <Switch
-                    id="featured"
-                    checked={formData.featured}
-                    onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
-                  />
-                  <Label htmlFor="featured" className="text-base cursor-pointer">
-                    Featured Product
-                  </Label>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Switch
-                    id="trending"
-                    checked={formData.trending}
-                    onCheckedChange={(checked) => setFormData({ ...formData, trending: checked })}
-                  />
-                  <Label htmlFor="trending" className="text-base cursor-pointer">
-                    Trending Product
-                  </Label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              onClick={() => router.push("/admin/products")}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl min-w-[150px]"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-5 w-5" />
-                  Update Product
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8 max-w-full overflow-x-hidden">
+        {/* Image Upload Section */}
+        <Card className="overflow-hidden border-2 hover:border-accent/50 transition-all duration-300">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <Label className="text-lg font-semibold mb-4 block">Product Images</Label>
+
+            {/* Existing Images */}
+            {existingImages.length > 0 && (
+              <div className="mb-6">
+                <p className="text-sm text-muted-foreground mb-3">Current Images</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                  {existingImages.map((image, index) => (
+                    <div
+                      key={`existing-${index}`}
+                      className="relative group aspect-square rounded-xl overflow-hidden border-2 border-pink-100 hover:border-accent transition-all duration-300 hover:scale-[1.02]"
+                    >
+                      <Image
+                        src={image || "/placeholder.svg"}
+                        alt={`Existing ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeExistingImage(index)}
+                        className="absolute top-2 right-2 bg-destructive/90 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Dropzone */}
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`relative border-2 border-dashed rounded-2xl p-6 sm:p-8 md:p-12 transition-all duration-300 ${
+                isDragging
+                  ? "border-accent bg-accent/10 scale-105"
+                  : "border-pink-200 bg-gradient-to-br from-pink-50/50 to-rose-50/50"
+              } hover:border-accent hover:bg-accent/5`}
+              style={{
+                backgroundImage: isDragging
+                  ? "none"
+                  : "radial-gradient(circle, rgba(251, 207, 232, 0.3) 1px, transparent 1px)",
+                backgroundSize: "20px 20px",
+              }}
+            >
+              <div className="flex flex-col items-center justify-center text-center space-y-4">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-full blur-xl opacity-30 animate-pulse" />
+                  <div className="relative bg-gradient-to-br from-primary/10 to-accent/10 p-5 sm:p-6 rounded-full">
+                    <Upload className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-base sm:text-lg font-semibold mb-1">Add more images</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">or click to browse</p>
+                </div>
+                <Button type="button" variant="outline" className="relative bg-transparent" asChild>
+                  <label className="cursor-pointer">
+                    Choose Files
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e.target.files)}
+                      className="hidden"
+                    />
+                  </label>
+                </Button>
+                <p className="text-xs text-muted-foreground">Images will be converted to WebP format</p>
+              </div>
+            </div>
+
+            {/* New Image Previews */}
+            {imagePreviews.length > 0 && (
+              <div className="mt-6">
+                <p className="text-sm text-muted-foreground mb-3">New Images</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                  {imagePreviews.map((preview, index) => (
+                    <div
+                      key={`new-${index}`}
+                      className="relative group aspect-square rounded-xl overflow-hidden border-2 border-pink-100 hover:border-accent transition-all duration-300 hover:scale-[1.02]"
+                    >
+                      <Image
+                        src={preview || "/placeholder.svg"}
+                        alt={`Preview ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeNewImage(index)}
+                        className="absolute top-2 right-2 bg-destructive/90 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Product Details */}
+        <Card className="overflow-hidden border-2 hover:border-accent/50 transition-all duration-300">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <h2 className="text-xl sm:text-2xl font-serif font-semibold mb-5 sm:mb-6 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-accent" />
+              Product Details
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {/* Left Column */}
+              <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm sm:text-base">Product Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Elegant Bridal Clutch"
+                    className="h-11 sm:h-12"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category" className="text-sm sm:text-base">Category *</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, category: value as Product["category"] })
+                    }
+                  >
+                    <SelectTrigger className="h-11 sm:h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bridal-clutches">Bridal Clutches</SelectItem>
+                      <SelectItem value="nikkah-pens">Nikkah Pens</SelectItem>
+                      <SelectItem value="nikkah-glasses">Nikkah Glasses</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="price" className="text-sm sm:text-base">Price (Rs.) *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="5000"
+                    className="h-11 sm:h-12"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="originalPrice" className="text-sm sm:text-base">
+                    Original Price (Rs.)
+                  </Label>
+                  <Input
+                    id="originalPrice"
+                    type="number"
+                    value={formData.originalPrice}
+                    onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
+                    placeholder="7000"
+                    className="h-11 sm:h-12"
+                  />
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-sm sm:text-base">Description *</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Describe your beautiful product..."
+                    rows={5}
+                    className="resize-none"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="stock" className="text-sm sm:text-base">Stock Quantity *</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    value={formData.stockQuantity}
+                    onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
+                    placeholder="50"
+                    className="h-11 sm:h-12"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="specs" className="text-sm sm:text-base">
+                    Specifications (JSON)
+                  </Label>
+                  <Textarea
+                    id="specs"
+                    value={formData.specifications}
+                    onChange={(e) => setFormData({ ...formData, specifications: e.target.value })}
+                    placeholder='{"Material": "Silk", "Dimensions": "8x5 inches"}'
+                    rows={3}
+                    className="resize-none font-mono text-xs sm:text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Toggles */}
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="featured"
+                  checked={formData.featured}
+                  onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
+                />
+                <Label htmlFor="featured" className="text-sm sm:text-base cursor-pointer">
+                  Featured Product
+                </Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="trending"
+                  checked={formData.trending}
+                  onCheckedChange={(checked) => setFormData({ ...formData, trending: checked })}
+                />
+                <Label htmlFor="trending" className="text-sm sm:text-base cursor-pointer">
+                  Trending Product
+                </Label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={() => router.push("/admin/products")}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isSubmitting}
+            className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl min-w-[150px]"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-5 w-5" />
+                Update Product
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
-  )
+  </div>
+)
+
 }
