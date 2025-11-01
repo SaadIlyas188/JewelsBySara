@@ -708,8 +708,8 @@ export default function AdminProductsPage() {
   const categories = [
     { value: "all", label: "All Categories" },
     { value: "bridal-clutches", label: "Bridal Clutches" },
-    { value: "nikkah-pens", label: "Nikkah Pens" },
-    { value: "nikkah-glasses", label: "Nikkah Glasses" },
+    { value: "nikkah-accessories", label: "Nikkah Accessories" },
+    { value: "jewelry", label: "Jewelry" },
   ]
 
   const productsByCategory = categories.slice(1).map((cat) => ({

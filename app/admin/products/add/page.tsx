@@ -273,8 +273,8 @@ export default function AddProductPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="bridal-clutches">Bridal Clutches</SelectItem>
-                      <SelectItem value="nikkah-pens">Nikkah Pens</SelectItem>
-                      <SelectItem value="nikkah-glasses">Nikkah Glasses</SelectItem>
+                      <SelectItem value="nikkah-accessories">Nikkah Accessories</SelectItem>
+                      <SelectItem value="jewelry">Jewelry</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

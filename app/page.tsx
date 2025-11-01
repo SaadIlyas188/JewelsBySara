@@ -22,6 +22,8 @@ export default function HomePage() {
   const { addItem } = useCart()
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([])
   const [trendingProducts, setTrendingProducts] = useState<any[]>([])
+
+  
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -227,15 +229,15 @@ export default function HomePage() {
                 desc: "Elegant & Timeless",
               },
               {
-                href: "/category/nikkah-pens",
+                href: "/category/nikkah-accessories",
                 src: "/gold-nikkah-pen-elegant.jpg",
-                title: "Nikkah Pens",
+                title: "Nikkah Accessories",
                 desc: "Precious Keepsakes",
               },
               {
-                href: "/category/nikkah-glasses",
+                href: "/category/jewelry",
                 src: "/vintage-gold-rim-nikkah-glasses.jpg",
-                title: "Nikkah Glasses",
+                title: "Jewelry",
                 desc: "Luxurious Tradition",
               },
             ].map((cat) => (
