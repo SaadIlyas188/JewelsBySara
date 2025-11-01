@@ -102,12 +102,12 @@ export function Header() {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            href="/category/nikkah-pens"
+                            href="/category/nikkah-accessories"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-baby-pink/50 hover:text-raspberry focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Nikkah Pens</div>
+                            <div className="text-sm font-medium leading-none">Nikkah Accessories</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Beautiful pens for your nikkah ceremony
+                              Beautiful pens and glasses for your nikkah ceremony
                             </p>
                           </Link>
                         </NavigationMenuLink>
@@ -115,12 +115,12 @@ export function Header() {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            href="/category/nikkah-glasses"
+                            href="/category/jewelry"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-baby-pink/50 hover:text-raspberry focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Nikkah Glasses</div>
+                            <div className="text-sm font-medium leading-none">Jewelry</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Decorative glasses for your celebration
+                              Decorative pieces for your celebration
                             </p>
                           </Link>
                         </NavigationMenuLink>
@@ -313,14 +313,14 @@ export function Header() {
                     >
                       Bridal Clutches
                     </Link>
-                    <Link href="/category/nikkah-pens" className="px-3 py-2 text-sm hover:bg-baby-pink/50 rounded-md">
-                      Nikkah Pens
+                    <Link href="/category/nikkah-accessories" className="px-3 py-2 text-sm hover:bg-baby-pink/50 rounded-md">
+                      Nikkah Accessories
                     </Link>
                     <Link
-                      href="/category/nikkah-glasses"
+                      href="/category/jewelry"
                       className="px-3 py-2 text-sm hover:bg-baby-pink/50 rounded-md"
                     >
-                      Nikkah Glasses
+                      Jewelry
                     </Link>
 
                     <div className="font-semibold text-sm text-muted-foreground px-3 py-2 mt-4">Help</div>

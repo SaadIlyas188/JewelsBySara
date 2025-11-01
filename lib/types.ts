@@ -5,7 +5,7 @@ export interface Product {
   description: string
   price: number
   originalPrice?: number
-  category: "bridal-clutches" | "nikkah-pens" | "nikkah-glasses"
+  category: "bridal-clutches" | "nikkah-accessories" | "jewelry"
   images: string[]
   inStock: boolean
   stockQuantity: number
